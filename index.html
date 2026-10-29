@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECCE 2026 SpinWheel</title>
+  <!-- Google Fonts: Playpen Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Reset & Variable Tokens */
+    :root {
+      --bing-red: #E64A19;
+      --bing-red-hover: #D84315;
+      --bing-yellow: #FFCA28;
+      --bing-yellow-hover: #FFB300;
+      --bing-blue: #29B6F6;
+      --bing-blue-dark: #0288D1;
+      --bing-green: #7CB342;
+      --bing-orange: #FF9800;
+      --bing-purple: #AB47BC;
+      --font-family: 'Playpen Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: linear-gradient(180deg, #EBF7FF 0%, #D5F0FF 50%, #C3EBFF 100%);
+      background-attachment: fixed;
+      color: #1E293B;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Static Cloud Background */
+    .bg-static-clouds {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: url('file:///Users/nisaa/Desktop/ECCE/background.jpg');
+      background-size: 1280px 900px;
+      background-position: 0 0;
+      opacity: 0.5;
+      filter: drop-shadow(0 4px 10px rgba(41, 182, 246, 0.1));
+    }
+
+    /* Interactive Elements & Bouncy Animations */
+    .bounce-hover {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
+    }
+    .bounce-hover:hover {
+      transform: scale(1.06) translateY(-2px);
+    }
+    .bounce-hover:active {
+      transform: scale(0.94);
+    }
+
+    .spin-btn-hover {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
+    }
+    .spin-btn-hover:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      background: var(--bing-yellow-hover);
+    }
+    .spin-btn-hover:active {
+      transform: translate(-50%, -50%) scale(0.94);
+    }
+
+    @keyframes pointerBeat {
+      0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+      50% { transform: translateX(-50%) translateY(-4px) scale(1.08); }
+    }
+    .pointer-pulse {
+      animation: pointerBeat 1.8s infinite ease-in-out;
+    }
+
+    /* Top-Right action buttons */
+    .top-actions {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 30;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .settings-fab {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      background: var(--bing-orange);
+      color: #fff;
+    }
+    .settings-fab:hover {
+      background: #E68A00;
+    }
+
+    .fullscreen-fab {
+      border: 1px solid #CBD5E1;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      background: #FFFFFF;
+      color: #475569;
+    }
+    .fullscreen-fab:hover {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      border-radius: 16px;
+      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .btn-slate {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #CBD5E1;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+    .btn-slate:hover {
+      background: #E2E8F0;
+      color: #0F172A;
+    }
+
+    /* Main Layout */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+      padding: 12px;
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .wheel-card {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      min-height: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wheel-header-info {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+      gap: 8px;
+      padding: 0 4px;
+      padding-right: 280px;
+    }
+
+    .badge-count {
+      color: var(--bing-blue-dark);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.8);
+      padding: 6px 12px;
+      border-radius: 12px;
+      backdrop-filter: blur(4px);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas#wheelCanvas {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      cursor: pointer;
+      touch-action: none;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
+      display: block;
+    }
+
+    .top-pointer {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    }
+
+    .center-spin-btn {
+      position: absolute;
+      z-index: 20;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(70px, 14vmin, 110px);
+      height: clamp(70px, 14vmin, 110px);
+      background: var(--bing-yellow);
+      color: #0F172A;
+      font-weight: 800;
+      border-radius: 50%;
+      border: 4px solid #FFFFFF;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .center-spin-btn .subtext {
+      font-size: clamp(0.5rem, 1.4vmin, 0.7rem);
+      color: var(--bing-red);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .center-spin-btn .spin-text {
+      font-size: clamp(1rem, 3.2vmin, 1.6rem);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    /* Drawer Side Panel */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .drawer-backdrop.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .side-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 100%;
+      max-width: 420px;
+      background: #FFFFFF;
+      z-index: 50;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+      border-left: 4px solid var(--bing-yellow);
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .side-drawer.visible {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px;
+      border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #F8FAFC;
+    }
+
+    .drawer-header h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #1E293B;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #CBD5E1;
+      background: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: 2px solid #E2E8F0;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 400;
+      color: #334155;
+      resize: vertical;
+      min-height: 180px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--bing-blue);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-action {
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-import {
+      background: #ECFDF5;
+      color: #047857;
+      border-color: #A7F3D0;
+    }
+    .btn-import:hover { background: #D1FAE5; }
+
+    .btn-export {
+      background: #F0F9FF;
+      color: #0369A1;
+      border-color: #BAE6FD;
+    }
+    .btn-export:hover { background: #E0F2FE; }
+
+    .settings-box {
+      background: #F8FAFC;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: 0.95rem;
+    }
+
+    .settings-title {
+      font-weight: 800;
+      color: #1E293B;
+      font-size: 1.05rem;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--bing-red);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--bing-red);
+      cursor: pointer;
+    }
+
+    .drawer-footer {
+      padding: 16px;
+      border-top: 1px solid #F1F5F9;
+      background: #F8FAFC;
+    }
+
+    .btn-reset {
+      width: 100%;
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-reset:hover { background: #FDE68A; }
+
+    /* Winner Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      cursor: pointer;
+      user-select: none;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: 32px;
+      width: 100%;
+      max-width: min(90vw, 560px);
+      /* Flex column so we can true-center the name in the middle */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      /* top padding leaves room for the image overhang */
+      padding: clamp(28px, 6vmin, 60px) clamp(20px, 4vmin, 36px) clamp(24px, 5vmin, 48px);
+      text-align: center;
+      border: 4px solid var(--bing-yellow);
+      box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.15);
+      transform: scale(0.9);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      margin: 80px 0 40px 0;
+      overflow: visible;
+      min-height: clamp(260px, 46vmin, 380px);
+    }
+
+    .modal-overlay.visible .modal-card {
+      transform: scale(1);
+    }
+
+    /* Image at TOP, half hanging outside above */
+    .winner-image-wrap {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translate(-45%, -60%);
+      width: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .winner-image-wrap img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      max-height: clamp(200px, 45vmin, 400px);
+      object-fit: contain;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    /* Winner name — centered in the middle of the card, big */
+    .winner-name-display {
+      font-size: clamp(2.6rem, 11vmin, 6rem);
+      font-weight: 800;
+      color: #0F172A;
+      word-break: break-word;
+      line-height: 1.1;
+      margin: 0;
+      /* flex: 1 lets it take up the available middle space so it sits vertically centered */
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: clamp(8px, 2vmin, 16px) 0;
+      position: relative;
+      z-index: 3;
+    }
+
+    /* Next spin button pinned near the bottom */
+    .btn-next-spin {
+      position: relative;
+      z-index: 3;
+      background: var(--bing-red);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 999px;
+      padding: clamp(12px, 2.4vmin, 18px) clamp(28px, 6vmin, 44px);
+      font-family: inherit;
+      font-weight: 800;
+      font-size: clamp(1rem, 2.4vmin, 1.3rem);
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(230, 74, 25, 0.35);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-next-spin:hover {
+      background: var(--bing-red-hover);
+      transform: scale(1.05) translateY(-2px);
+    }
+    .btn-next-spin:active {
+      transform: scale(0.95);
+    }
+
+    .modal-hint {
+      display: none;
+    }
+
+    /* Confetti Overlay Canvas */
+    canvas#confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 65;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Cloud Background -->
+  <div class="bg-static-clouds"></div>
+
+  <!-- Top-right action buttons -->
+  <div class="top-actions">
+    <button id="fullscreenBtn" class="fullscreen-fab bounce-hover" title="Toggle fullscreen">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+      <span>Fullscreen</span>
+    </button>
+    <button id="togglePanelBtn" class="settings-fab bounce-hover">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span id="togglePanelText">Settings</span>
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="wheel-card">
+      <div class="wheel-header-info">
+        <div class="badge-count">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFCA28"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span id="segmentCountBadge">8 Entries</span>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper">
+        <div class="top-pointer pointer-pulse">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21L4.5 7.5C3.5 5.5 5 3 7.5 3H16.5C19 3 20.5 5.5 19.5 7.5L12 21Z" fill="#E64A19" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <canvas id="wheelCanvas" width="1400" height="1400" title="Click anywhere on wheel to spin!"></canvas>
+
+        <button id="centerSpinBtn" class="center-spin-btn spin-btn-hover" title="Click to spin!">
+          <span class="subtext">BING</span>
+          <span class="spin-text">SPIN!</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Drawer Overlay Backdrop -->
+  <div id="drawerBackdrop" class="drawer-backdrop"></div>
+
+  <!-- Right Slide-In Drawer -->
+  <aside id="sideDrawer" class="side-drawer">
+    <div class="drawer-header">
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Settings
+      </h2>
+      <button id="closeDrawerBtn" class="icon-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="form-group">
+        <label for="namesTextarea">Edit Names (One per line):</label>
+        <textarea id="namesTextarea" placeholder="Type names line by line..."></textarea>
+      </div>
+
+      <div class="grid-2">
+        <label class="btn-action btn-import">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Import CSV/TXT
+          <input type="file" id="csvFileInput" accept=".csv, .txt, .tsv" style="display:none;">
+        </label>
+
+        <button id="exportBtn" class="btn-action btn-export">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export CSV
+        </button>
+      </div>
+
+      <div class="settings-box">
+        <div class="settings-title">Wheel Settings</div>
+        
+        <div>
+          <div class="setting-row" style="margin-bottom: 6px;">
+            <span style="font-weight:600;">Spin Duration:</span>
+            <span id="spinDurationValue" style="color:var(--bing-red); font-weight:800;">5 Seconds</span>
+          </div>
+          <input type="range" id="spinDurationRange" min="1" max="10" value="5">
+        </div>
+
+        <div class="setting-row" style="border-top:1px solid #E2E8F0; padding-top:10px;">
+          <span style="font-weight:600;">Sound Effects</span>
+          <button id="soundToggleBtn" class="btn btn-slate">
+            <span id="soundToggleText">ON</span>
+          </button>
+        </div>
+
+        <div style="border-top:1px solid #E2E8F0; padding-top:10px;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="removeOnWinCheck" checked>
+            <span>Remove winner after spin?</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button id="resetAllBtn" class="btn-reset">
+        Reset to Default Names
+      </button>
+    </div>
+  </aside>
+
+  <!-- Winner Modal -->
+  <div id="winnerModal" class="modal-overlay">
+    <div class="modal-card" id="winnerModalCard">
+      <!-- Image at TOP, half hanging outside above the card -->
+      <div class="winner-image-wrap">
+        <img
+          id="winnerImage"
+          src="file:///Users/nisaa/Desktop/ECCE/popup.png"
+          alt="Winner"
+        />
+      </div>
+
+      <!-- Winner name centered in the middle of the card -->
+      <div class="winner-name-display" id="winnerNameText">Bing!</div>
+
+      <!-- Next Spin button near the bottom -->
+      <button id="nextSpinBtn" class="btn-next-spin bounce-hover" type="button">
+        Next Spin!
+      </button>
+    </div>
+  </div>
+
+  <!-- Pure JS Confetti Engine Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <script>
+    // Theme Palette Colors
+    const PALETTE = [
+      '#FF8A80', '#80D8FF', '#FFE082', '#A7F3D0',
+      '#FFB74D', '#C5CAE9', '#F48FB1', '#B2DFDB'
+    ];
+
+    const DEFAULT_NAMES = ["Bing", "Sula", "Flop", "Pando", "Amma", "Coco", "Charlie", "Padget"];
+
+    // App State
+    let items = [...DEFAULT_NAMES];
+    let currentAngle = 0;
+    let isSpinning = false;
+    let soundEnabled = true;
+    let audioCtx = null;
+    let drawerOpen = false;
+
+    // DOM References
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const namesTextarea = document.getElementById('namesTextarea');
+    const centerSpinBtn = document.getElementById('centerSpinBtn');
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const csvFileInput = document.getElementById('csvFileInput');
+    const segmentCountBadge = document.getElementById('segmentCountBadge');
+
+    const winnerModal = document.getElementById('winnerModal');
+    const winnerNameText = document.getElementById('winnerNameText');
+    const winnerImage = document.getElementById('winnerImage');
+    const nextSpinBtn = document.getElementById('nextSpinBtn');
+
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const soundToggleText = document.getElementById('soundToggleText');
+    const removeOnWinCheck = document.getElementById('removeOnWinCheck');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const spinDurationRange = document.getElementById('spinDurationRange');
+    const spinDurationValue = document.getElementById('spinDurationValue');
+
+    const sideDrawer = document.getElementById('sideDrawer');
+    const drawerBackdrop = document.getElementById('drawerBackdrop');
+    const togglePanelBtn = document.getElementById('togglePanelBtn');
+    const togglePanelText = document.getElementById('togglePanelText');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+
+    // Drawer Open/Close Logic
+    function openDrawer() {
+      drawerOpen = true;
+      sideDrawer.classList.add('visible');
+      drawerBackdrop.classList.add('visible');
+      togglePanelText.textContent = "Hide Panel";
+    }
+
+    function closeDrawer() {
+      drawerOpen = false;
+      sideDrawer.classList.remove('visible');
+      drawerBackdrop.classList.remove('visible');
+      togglePanelText.textContent = "Settings";
+    }
+
+    togglePanelBtn.addEventListener('click', () => drawerOpen ? closeDrawer() : openDrawer());
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+
+    spinDurationRange.addEventListener('input', (e) => {
+      spinDurationValue.textContent = `${e.target.value} Seconds`;
+    });
+
+    // Native Web Audio API Sound Effects
+    function playTickSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.035);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.035);
+      } catch (e) {}
+    }
+
+    function playFanfareSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.28);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + i * 0.1);
+          osc.stop(audioCtx.currentTime + i * 0.1 + 0.28);
+        });
+      } catch (e) {}
+    }
+
+    // Render Canvas Wheel
+    function drawWheel() {
+      const width = canvas.width;
+      const height = canvas.height;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = width / 2 - 30;
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (items.length === 0) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fill();
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 8;
+        ctx.stroke();
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '600 32px "Playpen Sans", system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Please add entries in panel!', centerX, centerY);
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / items.length;
+
+      items.forEach((item, index) => {
+        const startAngle = currentAngle + index * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+        const color = PALETTE[index % PALETTE.length];
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1E293B';
+
+        let fontSize = 34;
+        if (items.length > 12) fontSize = 24;
+        if (items.length > 20) fontSize = 18;
+        
+        ctx.font = `600 ${fontSize}px "Playpen Sans", system-ui`;
+
+        let text = item.trim();
+        if (text.length > 16) text = text.substring(0, 14) + '...';
+
+        ctx.fillText(text, radius - 40, 0);
+        ctx.restore();
+      });
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 7, 0, Math.PI * 2);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#FFCA28';
+      ctx.stroke();
+    }
+
+    function updateFromTextarea() {
+      const rawText = namesTextarea.value;
+      items = rawText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      segmentCountBadge.textContent = `${items.length} Entr${items.length === 1 ? 'y' : 'ies'}`;
+      drawWheel();
+    }
+
+    function resetToDefaultNames() {
+      namesTextarea.value = DEFAULT_NAMES.join('\n');
+      updateFromTextarea();
+    }
+
+    let lastTickIndex = -1;
+    function spinWheel() {
+      if (isSpinning || items.length === 0) return;
+
+      if (window.innerWidth < 640 && drawerOpen) {
+        closeDrawer();
+      }
+
+      isSpinning = true;
+      centerSpinBtn.disabled = true;
+
+      const spinRotations = 5 + Math.random() * 5;
+      const randomOffset = Math.random() * Math.PI * 2;
+      const targetAngle = currentAngle + (spinRotations * Math.PI * 2) + randomOffset;
+      const duration = (parseInt(spinDurationRange.value, 10) || 5) * 1000;
+      const startAngle = currentAngle;
+      const startTime = performance.now();
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        
+        currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+        drawWheel();
+
+        const sliceAngle = (Math.PI * 2) / items.length;
+        const normalizedAngle = (Math.PI * 2 - (currentAngle % (Math.PI * 2)) + Math.PI * 1.5) % (Math.PI * 2);
+        const currentSliceIndex = Math.floor(normalizedAngle / sliceAngle);
+
+        if (currentSliceIndex !== lastTickIndex) {
+          playTickSound();
+          lastTickIndex = currentSliceIndex;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          centerSpinBtn.disabled = false;
+
+          const winningIndex = (items.length - 1 - Math.floor(normalizedAngle / sliceAngle)) % items.length;
+          const winner = items[(winningIndex + items.length) % items.length];
+
+          showWinnerModal(winner, winningIndex);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function showWinnerModal(winnerName, winnerIndex) {
+      winnerNameText.textContent = winnerName;
+      winnerModal.classList.add('visible');
+      winnerModal.dataset.winnerIndex = winnerIndex;
+
+      playFanfareSound();
+      launchConfetti();
+    }
+
+    function closeModal() {
+      winnerModal.classList.remove('visible');
+
+      if (removeOnWinCheck.checked) {
+        const index = parseInt(winnerModal.dataset.winnerIndex, 10);
+        if (!isNaN(index) && items[index] !== undefined) {
+          items.splice(index, 1);
+          namesTextarea.value = items.join('\n');
+          updateFromTextarea();
+        }
+      }
+    }
+
+    function handleNextSpin(e) {
+      if (e) e.stopPropagation();
+      closeModal();
+      setTimeout(spinWheel, 120);
+    }
+
+    function handleCSVImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const text = evt.target.result;
+        const lines = text.split(/\r\n|\n|\r/);
+        const imported = [];
+
+        lines.forEach(line => {
+          const parts = line.split(/[,;\t]/).map(p => p.replace(/^["']|["']$/g, '').trim());
+          parts.forEach(name => {
+            if (name.length > 0 && name.toLowerCase() !== 'names' && name.toLowerCase() !== 'name') {
+              imported.push(name);
+            }
+          });
+        });
+
+        if (imported.length > 0) {
+          namesTextarea.value = imported.join('\n');
+          updateFromTextarea();
+        }
+      };
+      reader.readAsText(file);
+      csvFileInput.value = '';
+    }
+
+    function handleCSVExport() {
+      if (items.length === 0) return;
+      
+      const csvContent = "data:text/csv;charset=utf-8,Names\n" + items.map(e => `"${e.replace(/"/g, '""')}"`).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "Bing_Wheel_Names.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Native Pure Canvas Confetti Explosion
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfettiCanvas);
+    resizeConfettiCanvas();
+
+    function launchConfetti() {
+      confettiParticles = [];
+      const colors = ['#E64A19', '#FFCA28', '#29B6F6', '#7CB342', '#AB47BC', '#FF9800'];
+      for (let i = 0; i < 90; i++) {
+        confettiParticles.push({
+          x: window.innerWidth / 2,
+          y: window.innerHeight * 0.6,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.8) * 16,
+          size: Math.random() * 8 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 10,
+          opacity: 1
+        });
+      }
+      requestAnimationFrame(updateConfetti);
+    }
+
+    function updateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      let alive = false;
+
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.35;
+        p.rotation += p.vRot;
+        p.opacity -= 0.012;
+
+        if (p.opacity > 0) {
+          alive = true;
+          confettiCtx.save();
+          confettiCtx.translate(p.x, p.y);
+          confettiCtx.rotate((p.rotation * Math.PI) / 180);
+          confettiCtx.globalAlpha = Math.max(0, p.opacity);
+          confettiCtx.fillStyle = p.color;
+          confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          confettiCtx.restore();
+        }
+      });
+
+      if (alive) {
+        requestAnimationFrame(updateConfetti);
+      }
+    }
+
+    // Attach Main Events
+    window.onload = () => {
+      resetToDefaultNames();
+
+      namesTextarea.addEventListener('input', updateFromTextarea);
+      centerSpinBtn.addEventListener('click', spinWheel);
+      canvas.addEventListener('click', spinWheel);
+
+      resetAllBtn.addEventListener('click', resetToDefaultNames);
+
+      csvFileInput.addEventListener('change', handleCSVImport);
+      exportBtn.addEventListener('click', handleCSVExport);
+
+      winnerModal.addEventListener('click', closeModal);
+      nextSpinBtn.addEventListener('click', handleNextSpin);
+
+      soundToggleBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundToggleText.textContent = soundEnabled ? 'ON' : 'OFF';
+      });
+
+      fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+    };
+  </script>
+</body>
+</html>
